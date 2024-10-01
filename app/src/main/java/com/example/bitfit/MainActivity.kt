@@ -17,47 +17,49 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
 class MainActivity : AppCompatActivity() {
+    // List to hold display items
     private val food_item = mutableListOf<DisplayBitFit>()
     private val foodAdapter = FoodAdapter(this, food_item)
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
+        // Handle window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        val BitFitRecyclerViewer : RecyclerView = findViewById(R.id.bitfitItems)
-        // TODO: Set up ArticleAdapter with articles
 
-        BitFitRecyclerViewer.layoutManager = LinearLayoutManager(this).also {
+        // RecyclerView setup
+        val bitFitRecyclerViewer: RecyclerView = findViewById(R.id.bitfitItems)
+        bitFitRecyclerViewer.layoutManager = LinearLayoutManager(this).also {
             val dividerItemDecoration = DividerItemDecoration(this, it.orientation)
-            BitFitRecyclerViewer.addItemDecoration(dividerItemDecoration)
-
-
-            BitFitRecyclerViewer.adapter = foodAdapter
+            bitFitRecyclerViewer.addItemDecoration(dividerItemDecoration)
         }
+        bitFitRecyclerViewer.adapter = foodAdapter
 
+        // Fetch data from the database in a coroutine
         lifecycleScope.launch(IO) {
+            // Collect items from the database as a Flow
             (application as BitFitApplication).db.articleDao().getAll().collect { databaseList ->
                 databaseList.map { entity ->
+                    // Map the database entity to a display-friendly model
                     DisplayBitFit(
                         entity.food,
-                        entity.calories,
+                        entity.calories
                     )
                 }.also { mappedList ->
-                    // Use withContext to update the UI on the main thread
+                    // Switch to the Main thread to update UI
                     withContext(Dispatchers.Main) {
-                        food_item.clear()
-                        food_item.addAll(mappedList)
-                        foodAdapter.notifyDataSetChanged()
+                        food_item.clear() // Clear current list
+                        food_item.addAll(mappedList) // Add new items
+                        foodAdapter.notifyDataSetChanged() // Notify adapter
 
-                        // Log data to check if anything is retrieved from the database
+                        // Log to check retrieved data
                         mappedList.forEach {
                             Log.d("MainActivityLog", "Food: ${it.food}, Calories: ${it.calories}")
                         }
@@ -66,16 +68,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
-
+        // Set up button to navigate to AddEntryActivity
         val button = findViewById<Button>(R.id.button)
-
-
-        button.setOnClickListener{
+        button.setOnClickListener {
             val intent = Intent(this, AddEntryActivity::class.java)
             startActivity(intent)
         }
-
-
     }
 }
