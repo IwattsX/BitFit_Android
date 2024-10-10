@@ -8,10 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -27,46 +30,27 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        // Handle window insets
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        val fragmentManager: FragmentManager = supportFragmentManager
 
-        // RecyclerView setup
-        val bitFitRecyclerViewer: RecyclerView = findViewById(R.id.bitfitItems)
-        bitFitRecyclerViewer.layoutManager = LinearLayoutManager(this).also {
-            val dividerItemDecoration = DividerItemDecoration(this, it.orientation)
-            bitFitRecyclerViewer.addItemDecoration(dividerItemDecoration)
-        }
-        bitFitRecyclerViewer.adapter = foodAdapter
+        // define your fragments here
+        val bitFitListFragment: Fragment = BitFitListFragment()
 
-        // Fetch data from the database in a coroutine
-        lifecycleScope.launch(IO) {
-            // Collect items from the database as a Flow
-            (application as BitFitApplication).db.articleDao().getAll().collect { databaseList ->
-                databaseList.map { entity ->
-                    // Map the database entity to a display-friendly model
-                    DisplayBitFit(
-                        entity.food,
-                        entity.calories
-                    )
-                }.also { mappedList ->
-                    // Switch to the Main thread to update UI
-                    withContext(Dispatchers.Main) {
-                        food_item.clear() // Clear current list
-                        food_item.addAll(mappedList) // Add new items
-                        foodAdapter.notifyDataSetChanged() // Notify adapter
+        // TODO: Change this to the new ListFragment that will be used for
+        val summaryBitFitFragment: Fragment = BitFitListFragment()
 
-                        // Log to check retrieved data
-                        mappedList.forEach {
-                            Log.d("MainActivityLog", "Food: ${it.food}, Calories: ${it.calories}")
-                        }
-                    }
-                }
+        val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottom_navigation)
+        // handle navigation selection
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            lateinit var fragment: Fragment
+            when (item.itemId) {
+                R.id.nav_food_items -> fragment = bitFitListFragment
+                R.id.nav_summary -> fragment = summaryBitFitFragment
             }
+            replaceFragment(fragment)
+            true
         }
+
+
 
         // Set up button to navigate to AddEntryActivity
         val button = findViewById<Button>(R.id.button)
@@ -74,5 +58,12 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, AddEntryActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun replaceFragment(foodListFragment: Fragment) {
+        val fragmentManager = supportFragmentManager
+        val fragmentTransaction = fragmentManager.beginTransaction()
+        fragmentTransaction.replace(R.id.BitFit_frame_layout, foodListFragment)
+        fragmentTransaction.commit()
     }
 }
