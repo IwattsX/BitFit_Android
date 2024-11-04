@@ -36,8 +36,9 @@ class MainActivity : AppCompatActivity() {
         val bitFitListFragment: Fragment = BitFitListFragment()
 
         // TODO: Change this to the new ListFragment that will be used for
-        val summaryBitFitFragment: Fragment = BitFitListFragment()
+        val summaryBitFitFragment: Fragment = SummaryFragment()
 
+        replaceFragment(bitFitListFragment)
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottom_navigation)
         // handle navigation selection
         bottomNavigationView.setOnItemSelectedListener { item ->
