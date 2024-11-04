@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_food_items"
+        android:icon="@drawable/baseline_food_bank_24"
+        android:title="Food-List" />
+
+    <item
+        android:id="@+id/nav_summary"
+        android:icon="@drawable/baseline_dashboard_customize_24"
+        android:title="Dashboard" />
+</menu>
